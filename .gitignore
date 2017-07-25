@@ -1,0 +1,5 @@
+# checkpoint
+ckpt/*
+
+# pycharm
+.idea/*
