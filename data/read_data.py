@@ -34,40 +34,48 @@ def read_data(file_names, batch_size=1):
         width = tf.cast(features['width'], tf.int32)
         # depth = tf.cast(features['depth'], tf.int32)
         label = tf.decode_raw(features['label'], tf.uint8)
-        img_shape = tf.stack([height, width, 3])
-        label_shape = tf.stack([height, width])
+
+        ####
+        img_shape = tf.stack([256, 256, 3])
+        label_shape = tf.stack([256, 256])
 
         # img [height, width, channel]
         img_reshaped = tf.cast(tf.reshape(img, img_shape), tf.float32)
 
         # label [height, width]
         label_reshaped = tf.reshape(label, label_shape)
-        img_reshaped = tf.expand_dims(img_reshaped, axis=0)
-        label_reshaped = tf.expand_dims(label_reshaped, axis=0)
+        # img_reshaped = tf.expand_dims(img_reshaped, axis=0)
+        # label_reshaped = tf.expand_dims(label_reshaped, axis=0)
         # one_hot_label  [batch_size, height, width, 22]
         # one_hot_label = tf.one_hot(label_reshaped, depth=22, axis=-1, dtype=tf.uint8)
         img_reshaped, one_hot_label, _ = preprocess_data(img_reshaped, label_reshaped)
-        concated_data = tf.concat([img_reshaped, one_hot_label], axis=-1)
+        # concated_data = tf.concat([img_reshaped, one_hot_label], axis=-1)
+        #
+        # data_shuffle_queue = tf.RandomShuffleQueue(capacity=100, min_after_dequeue=80, dtypes=tf.float32)
+        #
+        # enqueue_op = data_shuffle_queue.enqueue(concated_data)
+        # qr = tf.train.QueueRunner(data_shuffle_queue, enqueue_ops=[enqueue_op] * 4)
+        # queue_runner_impl.add_queue_runner(qr)
+        #
+        # get_concated_data = data_shuffle_queue.dequeue()
+        #
+        # # the first is img , the shape is [1, height, width, 3]
+        # # the second is one hot label, the shape is [1, height, width, num_classes]
+        # img = get_concated_data[:, :, :, :3]
+        # one_hot_label = get_concated_data[:, :, :, 3:]
+        # img_shape = tf.shape(img)
+        # img = tf.reshape(img, [img_shape[0], img_shape[1], img_shape[2], 3])
+        # one_hot_label_shape = tf.shape(one_hot_label)
+        #
+        # one_hot_label = tf.reshape(one_hot_label,
+        #                            [one_hot_label_shape[0], one_hot_label_shape[1], one_hot_label_shape[2], 22])
 
-        data_shuffle_queue = tf.RandomShuffleQueue(capacity=100, min_after_dequeue=80, dtypes=tf.float32)
+        bat_img, batch_label = tf.train.shuffle_batch(tensors=[img_reshaped, one_hot_label],
+                                                      batch_size=batch_size, capacity=100,
+                                                      min_after_dequeue=80,
+                                                      num_threads=4)
 
-        enqueue_op = data_shuffle_queue.enqueue(concated_data)
-        qr = tf.train.QueueRunner(data_shuffle_queue, enqueue_ops=[enqueue_op] * 4)
-        queue_runner_impl.add_queue_runner(qr)
-
-        get_concated_data = data_shuffle_queue.dequeue()
-
-        # the first is img , the shape is [1, height, width, 3]
-        # the second is one hot label, the shape is [1, height, width, num_classes]
-        img = get_concated_data[:, :, :, :3]
-        one_hot_label = get_concated_data[:, :, :, 3:]
-        img_shape = tf.shape(img)
-        img = tf.reshape(img, [img_shape[0], img_shape[1], img_shape[2], 3])
-        one_hot_label_shape = tf.shape(one_hot_label)
-
-        one_hot_label = tf.reshape(one_hot_label,
-                                   [one_hot_label_shape[0], one_hot_label_shape[1], one_hot_label_shape[2], 22])
-        return img, one_hot_label, None
+        return bat_img, batch_label, None
 
 
 def preprocess_data(img, label):
@@ -75,7 +83,7 @@ def preprocess_data(img, label):
         rgb_mean = tf.constant(RGB_MEAN, dtype=tf.float32)
         img = tf.subtract(img, rgb_mean)
 
-        one_hot_label = tf.one_hot(label, depth=22, axis=-1)
+        one_hot_label = tf.one_hot(label, depth=21, axis=-1)
     return img, one_hot_label, label
 
 

@@ -2,22 +2,30 @@ import tensorflow as tf
 from tensorflow.contrib import slim
 import numpy as np
 
-inputs = tf.placeholder(tf.float32, shape=[None, None, None, 3])
+from PIL import Image
+from skimage.transform import resize, rescale
+from skimage.io import imread, imsave
 
-conv1 = slim.conv2d(inputs, num_outputs=20, kernel_size=3, stride=4)
+img_path = '/media/fanyang/workspace/DataSet/VOCdevkit/VOC2012/SegmentationClass/2007_000033.png'
 
-de_weight = tf.get_variable('de_weight', shape=[3, 3, 3, 20])
 
-deconv1 = tf.nn.conv2d_transpose(conv1, filter=de_weight, output_shape=tf.shape(inputs),
-                                 strides=[1, 4, 4, 1], padding='SAME')
+img_obj = Image.open(img_path)
+print(img_obj)
 
-loss = deconv1 - inputs
-train_op = tf.train.GradientDescentOptimizer(0.001).minimize(loss)
+img = np.array(img_obj, dtype=np.uint8)
 
-with tf.Session() as sess:
-    tf.global_variables_initializer().run()
 
-    for i in range(10):
-        data_in = np.random.normal(size=[3, 97, 93, 3])
-        _, los_ = sess.run([train_op, loss], feed_dict={inputs: data_in})
-        print(los_)
+resized = resize(img, (10, 10), mode='constant', preserve_range=True).astype(np.uint8)
+
+print(resized)
+
+re_img_obj = Image.fromarray(resized, mode='P')
+re_img_obj = re_img_obj.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=255)
+print(re_img_obj)
+
+re_img_obj.save('demo_img.png')
+
+print(img.shape)
+# a = np.array([1, 2, 3, 4, 2, 1, 2, 3])
+# a[a == 2] = 0
+# print(a)

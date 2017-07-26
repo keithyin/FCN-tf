@@ -12,7 +12,7 @@ def img_softmax_loss(logits, labels):
     """
     with tf.name_scope("img_softmax_loss"):
         # balance the sample
-        class_weights = tf.constant([1.] * 22, dtype=tf.float32)
+        class_weights = tf.constant([1.] * 21, dtype=tf.float32)
         dis_logits = tf.nn.softmax(logits=logits, dim=-1)
         cross_entropy = tf.reduce_mean(-labels * tf.log(dis_logits + 1e-8) * class_weights)
         loss = cross_entropy * (logits.get_shape().as_list()[-1])
@@ -32,7 +32,7 @@ class FCN(object):
         :return: logits, the shape is [1, height, width, 22]
         """
         with slim.arg_scope(vgg.vgg_arg_scope()):
-            logits = vgg.vgg_16(inputs=inputs, num_classes=22, is_training=is_training)
+            logits = vgg.vgg_16(inputs=inputs, num_classes=21, is_training=is_training)
         return logits
 
     @staticmethod

@@ -4,7 +4,9 @@ from data import read_data
 from nets import model
 import progressbar
 
-GLOBAL_STEP = 46
+GLOBAL_STEP = 0
+
+BATCH_SIZE = 10
 
 
 def train_num_iteration(train_op, loss_op, num_iteration=2913):
@@ -48,7 +50,7 @@ def train_num_iteration(train_op, loss_op, num_iteration=2913):
 
 def main():
     file_names = '/media/fanyang/workspace/DataSet/VOCdevkit/VOC2012/semantic_2012_train.tfrecords'
-    img, one_hot_label, _ = read_data.read_data(file_names=file_names)
+    img, one_hot_label, _ = read_data.read_data(file_names=file_names, batch_size=BATCH_SIZE)
     print(img)
     fcn = model.FCN()
     ###############debug#######
@@ -63,13 +65,13 @@ def main():
         tf.summary.FileWriter(logdir='./ckpt/', graph=sess.graph)
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
-        # fcn.restore_vgg16_ckpt("./ckpt/vgg_16.ckpt")
-        fcn.restore_fcn_ckpt('./ckpt')
+        fcn.restore_vgg16_ckpt("./ckpt/vgg_16.ckpt")
+        # fcn.restore_fcn_ckpt('./ckpt')
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
         try:
             while not coord.should_stop():
-                train_num_iteration(train_op=train_op, loss_op=loss)
+                train_num_iteration(train_op=train_op, loss_op=loss, num_iteration=2913//BATCH_SIZE)
                 fcn.save_fcn_ckpt(ckpt_path="./ckpt/fcn.ckpt", global_step=GLOBAL_STEP)
         except tf.errors.OutOfRangeError:
             print("Done training----epoch limit reached")
