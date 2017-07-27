@@ -2,12 +2,11 @@ from nets import model
 import tensorflow as tf
 import numpy as np
 from skimage.io import imread
-from data.gene_label import label2img
 import matplotlib.pyplot as plt
 from data.read_data import RGB_MEAN
 import os
 import pydensecrf.densecrf as dcrf
-
+from tools import image_visual_tools
 from pydensecrf.utils import create_pairwise_bilateral, \
     create_pairwise_gaussian, unary_from_softmax
 
@@ -17,7 +16,7 @@ def crf(prob, image):
     prob = np.transpose(prob, axes=(2, 0, 1))
     unary = unary_from_softmax(prob)
     unary = np.ascontiguousarray(unary)
-    d = dcrf.DenseCRF2D(image.shape[0], image.shape[1], 22)
+    d = dcrf.DenseCRF2D(image.shape[0], image.shape[1], 21)
     d.setUnaryEnergy(unary)
     feats = create_pairwise_gaussian(sdims=(3, 3), shape=image.shape[:2])
 
@@ -67,18 +66,23 @@ def main():
     inputs = tf.placeholder(dtype=tf.float32, shape=[1, None, None, 3], name='inputs')
     labels, prob_t = inference_net(inputs, net)
 
+    index = np.arange(len(imgs_abs_path))
+    np.random.shuffle(index)
+
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
         net.restore_fcn_ckpt("./ckpt")
-        for img_name, img_path in zip(imgs_name[10:30], imgs_abs_path[10:30]):
+        for i in index[:10]:
+            img_path = imgs_abs_path[i]
+            img_name = imgs_name[i]
             img = imread(img_path)
             label, prob = do_inference(label_tensor=labels, prob_tensor=prob_t, img=img)
             fig = plt.figure()
             axes1 = fig.add_subplot(1, 3, 1)
             axes2 = fig.add_subplot(1, 3, 2)
             axes3 = fig.add_subplot(1, 3, 3)
-            semantic_img = label2img(label)
-            crf_img = label2img(crf(prob, img))
+            semantic_img = image_visual_tools.semantic_image(label, max_class_id=21)
+            crf_img = image_visual_tools.semantic_image(crf(prob, img), max_class_id=21)
             axes1.imshow(semantic_img)
             axes2.imshow(crf_img)
             axes3.imshow(img)

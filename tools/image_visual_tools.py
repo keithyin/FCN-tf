@@ -26,6 +26,10 @@ import PIL.ImageFont as ImageFont
 import six
 from matplotlib import cm
 from matplotlib import colors
+COLOR_MAPS = [[0, 0, 0], [128, 64, 0], [192, 128, 128], [192, 0, 128], [128, 192, 0], [128, 128, 0],
+              [0, 128, 128], [0, 64, 0], [128, 0, 128], [192, 0, 0], [192, 128, 0], [0, 0, 128], [0, 128, 0],
+              [64, 0, 0], [128, 128, 128], [64, 128, 0], [0, 192, 0], [64, 0, 128], [128, 0, 0], [64, 128, 128],
+              [0, 64, 128]]
 
 _TITLE_LEFT_MARGIN = 10
 _TITLE_TOP_MARGIN = 10
@@ -415,12 +419,12 @@ def semantic_image(class_map, max_class_id=20):
     :return: semantic image with shape [heght, width, 3]
     """
     # for norm the image
-    norm = colors.Normalize(vmin=0., vmax=max_class_id)
+    # norm = colors.Normalize(vmin=0., vmax=max_class_id)
     # get color-map
-    mycm = cm.get_cmap('Set1')
-
-    normed_img = norm(class_map)
-    return mycm(normed_img)
+    # mycm = cm.get_cmap('Set3')
+    mycm = colors.ListedColormap(tuple(np.array(COLOR_MAPS)/255.))
+    # normed_img = norm(class_map)
+    return mycm(class_map)
 
 def main():
     save_image_array_as_png(np.ones([100, 100, 3]), 'test.png')

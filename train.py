@@ -4,9 +4,9 @@ from data import read_data
 from nets import model
 import progressbar
 
-GLOBAL_STEP = 0
+GLOBAL_STEP = 222
 
-BATCH_SIZE = 10
+BATCH_SIZE = 15
 
 
 def train_num_iteration(train_op, loss_op, num_iteration=2913):
@@ -24,8 +24,8 @@ def train_num_iteration(train_op, loss_op, num_iteration=2913):
     if sess is None:
         raise ValueError("using with tf.Session() to create a sess")
     total_loss = 0.
-    max_loss = 1.
-    min_loss = 1.
+    max_loss = 0.
+    min_loss = 10.
     max_step = 0
     min_step = 0
     begin = time.time()
@@ -65,8 +65,8 @@ def main():
         tf.summary.FileWriter(logdir='./ckpt/', graph=sess.graph)
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
-        fcn.restore_vgg16_ckpt("./ckpt/vgg_16.ckpt")
-        # fcn.restore_fcn_ckpt('./ckpt')
+        # fcn.restore_vgg16_ckpt("./ckpt/vgg_16.ckpt")
+        fcn.restore_fcn_ckpt('./ckpt')
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
         try:

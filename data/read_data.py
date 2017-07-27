@@ -4,6 +4,7 @@ from data.gene_label import COLOR_MAPS
 from data.gene_label import label2img
 from tensorflow.python.training import queue_runner_impl
 import numpy as np
+from tools import image_visual_tools
 
 _R_MEAN = 123.68
 _G_MEAN = 116.78
@@ -100,7 +101,7 @@ def main():
 
         img, label = sess.run([img, label])
 
-        plt.imshow(label2img(np.argmax(label[0], axis=-1)))
+        plt.imshow(image_visual_tools.semantic_image(np.argmax(label[0], axis=-1), max_class_id=21))
 
         plt.show()
         coord.request_stop()
